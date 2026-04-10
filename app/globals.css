@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #ffffff;
+    color: #263238;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Gradient border via ::before pseudo-element */
+  .gradient-border {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #9156EC, #D4B9FF);
+    z-index: -1;
+  }
+
+  /* Dark variant gradient border (for Features section pills) */
+  .gradient-border-dark::before {
+    background: linear-gradient(135deg, #D4B9FF, #9156EC);
+  }
+
+  /* Image overlay for feature cards */
+  .image-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #9156EC 0%, #0062FF 100%);
+    opacity: 0.45;
+    pointer-events: none;
+  }
+}
