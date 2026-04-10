@@ -2,9 +2,47 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { supabase } from '@/lib/supabase'
 
 export default function HeroSection() {
   const [open, setOpen] = useState(false)
+
+  // Form state
+  const [form, setForm] = useState({ name: '', phone: '', email: '', company: '', linkedin: '' })
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState('')
+
+  function handleChange(field: string, value: string) {
+    setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const { error: dbError } = await supabase.from('contact_leads').insert({
+      name: form.name,
+      phone: form.phone,
+      email: form.email,
+      company: form.company,
+      linkedin: form.linkedin || null,
+    })
+    setLoading(false)
+    if (dbError) {
+      setError('Something went wrong. Please try again.')
+    } else {
+      setSuccess(true)
+      setForm({ name: '', phone: '', email: '', company: '', linkedin: '' })
+      setTimeout(() => { setSuccess(false); setOpen(false) }, 2000)
+    }
+  }
+
+  function handleOpen() {
+    setSuccess(false)
+    setError('')
+    setOpen(true)
+  }
   return (
     <section
       id="hero"
@@ -81,7 +119,7 @@ export default function HeroSection() {
         <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
           <button
             className="flex items-center gap-3 font-funnel font-medium text-sm text-white hover:opacity-90 transition-opacity"
-            onClick={() => setOpen(true)}
+            onClick={handleOpen}
             style={{ background: 'linear-gradient(135deg, #9156EC 0%, #3F1487 100%)', borderRadius: '12px', padding: '14px 24px' }}
           >
             Talk to Us
@@ -157,63 +195,85 @@ export default function HeroSection() {
               Let&apos;s get you started
             </p>
 
-            <form onSubmit={(e) => e.preventDefault()} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {[
-                { label: 'Name',     type: 'text',  placeholder: 'Your full name',    optional: false },
-                { label: 'Contact',  type: 'tel',   placeholder: 'Phone number',       optional: false },
-                { label: 'Email',    type: 'email', placeholder: 'you@company.com',    optional: false },
-                { label: 'Company',  type: 'text',  placeholder: 'Your company name',  optional: false },
-                { label: 'LinkedIn', type: 'url',   placeholder: 'linkedin.com/in/…',  optional: true  },
-              ].map(({ label, type, placeholder, optional }) => (
-                <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  <label
-                    className="font-funnel font-medium"
-                    style={{ fontSize: '11px', color: '#455A64', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', gap: '5px' }}
-                  >
-                    {label}
-                    {optional && (
-                      <span style={{ fontSize: '10px', color: '#9156EC', background: '#F3ECFF', borderRadius: '4px', padding: '1px 6px', fontWeight: 500 }}>
-                        Optional
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    type={type}
-                    placeholder={placeholder}
-                    style={{
-                      background: '#F5F7F8',
-                      border: '1px solid #CFD8DC',
-                      borderRadius: '10px',
-                      padding: '7px 11px',
-                      fontSize: '12px',
-                      color: '#263238',
-                      outline: 'none',
-                      fontFamily: 'inherit',
-                      transition: 'border 0.2s',
-                    }}
-                    onFocus={(e) => (e.currentTarget.style.border = '1px solid #9156EC')}
-                    onBlur={(e) => (e.currentTarget.style.border = '1px solid #CFD8DC')}
-                  />
-                </div>
-              ))}
+            {success ? (
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <p className="font-funnel font-semibold" style={{ color: '#9156EC', fontSize: '15px' }}>
+                  Thank you!
+                </p>
+                <p className="font-funnel" style={{ color: '#607D8B', fontSize: '12px', marginTop: '6px' }}>
+                  We&apos;ll be in touch soon.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {[
+                  { label: 'Name',     field: 'name',     type: 'text',  placeholder: 'Your full name',    optional: false },
+                  { label: 'Contact',  field: 'phone',    type: 'tel',   placeholder: 'Phone number',       optional: false },
+                  { label: 'Email',    field: 'email',    type: 'email', placeholder: 'you@company.com',    optional: false },
+                  { label: 'Company',  field: 'company',  type: 'text',  placeholder: 'Your company name',  optional: false },
+                  { label: 'LinkedIn', field: 'linkedin', type: 'url',   placeholder: 'linkedin.com/in/…',  optional: true  },
+                ].map(({ label, field, type, placeholder, optional }) => (
+                  <div key={field} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <label
+                      className="font-funnel font-medium"
+                      style={{ fontSize: '11px', color: '#455A64', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', gap: '5px' }}
+                    >
+                      {label}
+                      {optional && (
+                        <span style={{ fontSize: '10px', color: '#9156EC', background: '#F3ECFF', borderRadius: '4px', padding: '1px 6px', fontWeight: 500 }}>
+                          Optional
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      type={type}
+                      placeholder={placeholder}
+                      required={!optional}
+                      value={form[field as keyof typeof form]}
+                      onChange={(e) => handleChange(field, e.target.value)}
+                      style={{
+                        background: '#F5F7F8',
+                        border: '1px solid #CFD8DC',
+                        borderRadius: '10px',
+                        padding: '7px 11px',
+                        fontSize: '12px',
+                        color: '#263238',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        transition: 'border 0.2s',
+                      }}
+                      onFocus={(e) => (e.currentTarget.style.border = '1px solid #9156EC')}
+                      onBlur={(e) => (e.currentTarget.style.border = '1px solid #CFD8DC')}
+                    />
+                  </div>
+                ))}
 
-              <button
-                type="submit"
-                className="font-funnel font-medium text-white hover:opacity-90 transition-opacity"
-                style={{
-                  marginTop: '4px',
-                  background: 'linear-gradient(135deg, #9156EC 0%, #3F1487 100%)',
-                  borderRadius: '10px',
-                  padding: '10px',
-                  fontSize: '13px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 20px rgba(145,86,236,0.35)',
-                }}
-              >
-                Submit
-              </button>
-            </form>
+                {error && (
+                  <p className="font-funnel" style={{ fontSize: '11px', color: '#e53935', textAlign: 'center' }}>
+                    {error}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="font-funnel font-medium text-white hover:opacity-90 transition-opacity"
+                  style={{
+                    marginTop: '4px',
+                    background: 'linear-gradient(135deg, #9156EC 0%, #3F1487 100%)',
+                    borderRadius: '10px',
+                    padding: '10px',
+                    fontSize: '13px',
+                    border: 'none',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.7 : 1,
+                    boxShadow: '0 4px 20px rgba(145,86,236,0.35)',
+                  }}
+                >
+                  {loading ? 'Submitting…' : 'Submit'}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}
