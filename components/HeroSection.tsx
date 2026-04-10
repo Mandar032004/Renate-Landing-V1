@@ -30,7 +30,7 @@ export default function HeroSection() {
     })
     setLoading(false)
     if (dbError) {
-      setError('Something went wrong. Please try again.')
+      setError(dbError.message)
     } else {
       setSuccess(true)
       setForm({ name: '', phone: '', email: '', company: '', linkedin: '' })
