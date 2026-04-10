@@ -48,7 +48,8 @@ export default function Navbar() {
       </a>
 
       {/* Candidate CTA */}
-      <button
+      <a
+        href="/talent"
         className="font-funnel font-medium text-sm text-white hover:opacity-90 transition-opacity shrink-0"
         style={{
           background: 'linear-gradient(135deg, #9156EC 0%, #3F1487 100%)',
@@ -60,7 +61,7 @@ export default function Navbar() {
           <span>Candidate?</span>
           <span style={{ fontSize: '11px', opacity: 0.85 }}>Drop in your resume</span>
         </span>
-      </button>
+      </a>
     </nav>
   )
 }
